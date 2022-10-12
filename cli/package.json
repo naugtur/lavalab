@@ -1,0 +1,30 @@
+{
+  "name": "lavalab",
+  "version": "1.0.0",
+  "description": "",
+  "bin": "lavalab.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/naugtur/lavalab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/naugtur/lavalab/issues"
+  },
+  "homepage": "https://github.com/naugtur/lavalab#readme",
+  "dependencies": {
+    "prompt-sync": "4.2.0",
+    "ses": "0.15.23"
+  },
+  "bundleDependencies": [
+    "prompt-sync",
+    "ses"
+  ],
+  "files": ["lavalab.js"]
+}
