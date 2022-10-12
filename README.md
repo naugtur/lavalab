@@ -83,3 +83,52 @@ Run real EVAL? [y/N]
 returning console.log instead of eval
 example_payload
 ```
+
+Annotated with explanations
+```
+## Running "samples/obfuscated-a.js" ##
+Access real global.parseInt? [a=always/y/N]a
+Access real global.undefined? [a=always/y/N]a
+Access real global.RegExp? [a=always/y/N]a
+Access real global.Boolean? [a=always/y/N]a
+Access real global.String? [a=always/y/N]a
+Access real global.decodeURIComponent? [a=always/y/N]a
+Access real global.Function? [a=always/y/N]y
+Access real global.window? [a=always/y/N]
+^^^ tools used to undo obfuscation
+Get global.window as [p/n/l/f/0]p
+Get global.window.console as [p/n/l/f/0]p
+Get global.window.console.log as [p/n/l/f/0]l
+Get global.window.console.warn as [p/n/l/f/0]l
+Get global.window.console.info as [p/n/l/f/0]l
+Get global.window.console.error as [p/n/l/f/0]l
+Get global.window.console.exception as [p/n/l/f/0]l
+Get global.window.console.table as [p/n/l/f/0]l
+Get global.window.console.trace as [p/n/l/f/0]l
+^^^ looks like polyfilling
+Access real global.console? [a=always/y/N]y
+^^^ actual console usage from the obfuscated script
+this is a demo sample
+^^^ output of that concole.log
+Access real global.URL? [a=always/y/N]y
+^^^ actual URL reference for the obfuscated script
+Access real global.Function? [a=always/y/N]
+Get global.Function as [p/n/l/f/0]l
+return (function() {}.constructor("return this")( ));
+^^^ attempt at getting the real global
+Access real global.window? [a=always/y/N]
+^^^ fallback to window
+Get global.window as [p/n/l/f/0]p
+Get global.window.setInterval as [p/n/l/f/0]l
+^^^ getting setInterval, we replace it with a log
+{} 4000
+^^^ looks like a deobfuscation prevention
+vvv all of the obfuscated script now running
+Access real global.require? [a=always/y/N]
+Get global.require as [p/n/l/f/0]f
+=>global.require( [Arguments] { '0': 'fs' } )
+Get global.require=>{}.readFileSync as [p/n/l/f/0]n
+Run real EVAL? [y/N]
+returning console.log instead of eval
+example_payload
+```
