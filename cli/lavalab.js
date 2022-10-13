@@ -28,7 +28,7 @@ function mkCatcher(PATH = "global") {
         if (typeof name === "symbol") {
           return undefined;
         }
-        if (hasOwnProperty(me, name)) {
+        if (hasOwnProperty.call(me, name)) {
           return me[name];
         }
 
