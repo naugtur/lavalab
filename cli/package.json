@@ -5,6 +5,7 @@
   "bin": "lavalab.js",
   "type": "commonjs",
   "scripts": {
+    "prepack": "npm i --ignore-scripts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,5 +27,7 @@
     "prompt-sync",
     "ses"
   ],
-  "files": ["lavalab.js"]
+  "files": [
+    "lavalab.js"
+  ]
 }

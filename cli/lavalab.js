@@ -3,7 +3,7 @@
 const dns = require("dns");
 require("ses");
 const prompt = require("prompt-sync")();
-const fs = require("fs");
+const { readFileSync, writeFileSync } = require("fs");
 
 const { freeze, create } = Object;
 const { log } = console;
@@ -82,8 +82,11 @@ const run = (sourceCode) => {
           if ("y" === prompt(`Run real EVAL? [y/N]`)) {
             return THE_EVAL;
           } else {
-            log("returning console.log instead of eval");
-            return freeze(log);
+            return freeze(function (code) {
+              const stamp = "eval" + Date.now();
+              log(stamp,":", code.substring(0, 20) + "…");
+              writeFileSync(stamp, code);
+            });
           }
         },
       })
@@ -94,6 +97,29 @@ const run = (sourceCode) => {
   return evaluate.call(create(null), sourceCode);
 };
 
+// const run2 = (sourceCode) => {
+//   const globs = create(mkCatcher())
+//   const comp = new Compartment(globs,{},{})
+//   lockdown();
+//   return comp.evaluate(sourceCode, {
+//     sloppyGlobalsMode:true
+//   });
+// };
+
+//   const file = process.argv[2];
+
+// function evadeDirectEvalExpressions (source) {
+//   /* eslint-disable-next-line prefer-regex-literals */
+//   const someDirectEvalPattern = new RegExp('\\beval(\\s*\\()', 'g')
+
+//   const replaceFn = (_, p1) => `(0,eval)${p1}`
+//   return source.replace(someDirectEvalPattern, replaceFn)
+// }
+
+// const code = fs.readFileSync(file, "utf-8")
+// run2(evadeDirectEvalExpressions(code));
+
+log("Making sure we're offline...");
 dns.lookupService("8.8.8.8", 53, function (err) {
   if (!err) {
     console.error("Refusing to run with internet access.");
@@ -102,5 +128,5 @@ dns.lookupService("8.8.8.8", 53, function (err) {
   const file = process.argv[2];
   log(`## Running "${file}" ##`);
 
-  run(fs.readFileSync(file, "utf-8"));
+  run(readFileSync(file, "utf-8"));
 });
