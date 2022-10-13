@@ -5,7 +5,7 @@ require("ses");
 const prompt = require("prompt-sync")();
 const { readFileSync, writeFileSync } = require("fs");
 
-const { freeze, create } = Object;
+const { freeze, create, hasOwnProperty } = Object;
 const { log } = console;
 
 function mkCatcher(PATH = "global") {
@@ -24,9 +24,12 @@ function mkCatcher(PATH = "global") {
         }
         return !(y === "y");
       },
-      get: (_, name) => {
+      get: (me, name) => {
         if (typeof name === "symbol") {
           return undefined;
+        }
+        if (hasOwnProperty(me, name)) {
+          return me[name];
         }
 
         const what = prompt(`Get ${PATH}.${name} as [p/n/l/f/0]`);
@@ -44,6 +47,17 @@ function mkCatcher(PATH = "global") {
             });
           default:
             return undefined;
+        }
+      },
+      set: (me, name, value) => {
+        if (typeof name === "symbol") {
+          return undefined;
+        }
+
+        const what = prompt(`Set ${PATH}.${name} [y/N]`);
+        if (what === "y") {
+          me[name] = value;
+          return true
         }
       },
     }
@@ -84,7 +98,7 @@ const run = (sourceCode) => {
           } else {
             return freeze(function (code) {
               const stamp = "eval" + Date.now();
-              log(stamp,":", code.substring(0, 20) + "…");
+              log(stamp, ":", code.substring(0, 20) + "…");
               writeFileSync(stamp, code);
             });
           }
