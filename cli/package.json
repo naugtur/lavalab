@@ -28,6 +28,7 @@
     "ses"
   ],
   "files": [
-    "lavalab.js"
+    "lavalab.js",
+    "evaluator.js"
   ]
 }

