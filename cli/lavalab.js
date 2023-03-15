@@ -2,7 +2,7 @@
 
 const dns = require("dns");
 require("ses");
-const { readFileSync, writeFileSync } = require("fs");
+const { readFileSync, } = require("fs");
 
 const { log } = console;
 
@@ -17,5 +17,5 @@ dns.lookupService("8.8.8.8", 53, function (err) {
   const file = process.argv[2];
   log(`## Running "${file}" ##`);
 
-  run(readFileSync(file, "utf-8"));
+  run(readFileSync(file, "utf-8"), { file });
 });

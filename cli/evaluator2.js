@@ -1,56 +1,8 @@
 #!/usr/bin/env node
 
 require("ses");
-const { basename, dirname, join } = require("path");
-const { writeFileSync, readFileSync, existsSync } = require("fs");
-const prompts = require("prompt-sync")();
 
-let HISTORYFILE;
-const history = [];
-let pendingPlayback = [];
-let fastForward = false;
-const prompt = (msg) => {
-  let res = null;
-  if (pendingPlayback && pendingPlayback.length > 0) {
-    const item = pendingPlayback.shift();
-    if (item[0] === msg) {
-      res = item[1];
-      if (!fastForward) {
-        const FF = prompts(`Replaying: "${msg}" -> ${res}`);
-        if (FF === "ff") {
-          fastForward = true;
-        }
-      }
-    } else {
-      console.log("Mismatched history, playback stopped.");
-    }
-  }
-  if (res === null) {
-    res = prompts(msg);
-  }
-  history.push([msg, res]);
-  writeFileSync(
-    HISTORYFILE,
-    "[" + history.map((i) => JSON.stringify(i)).join(",\n") + "]"
-  );
-  return res;
-};
-
-const loadHistory = ({ file }) => {
-  HISTORYFILE = join(dirname(file), "." + basename(file) + ".history");
-  if (existsSync(HISTORYFILE)) {
-    const hist = JSON.parse(readFileSync(HISTORYFILE));
-    console.log("+-- previous run");
-    console.log(
-      hist.map((item, num) => `| ${num}: ${item[0]}${item[1]}`).join("\n")
-    );
-    console.log("+--");
-    const num = ~~prompts("replay up to which step? [0-don't]");
-    if (num > 0) {
-      pendingPlayback = hist.slice(0, num);
-    }
-  }
-};
+const prompt = require("prompt-sync")();
 
 const { freeze, create, hasOwnProperty } = Object;
 const { log, clear } = console;
@@ -58,13 +10,13 @@ const { log, clear } = console;
 const knownProxies = new WeakMap();
 
 const visible = create(null);
-const addPath = (path = [], value) => {
+const addPath = (path = []) => {
   let current = visible;
   let redraw = false;
   for (const segment of path) {
     if (!hasOwnProperty.call(current, segment)) {
       redraw = true;
-      current[segment] = value || create(null);
+      current[segment] = create(null);
     }
     current = current[segment];
   }
@@ -84,12 +36,8 @@ const requireProxy = (target, thisArg, argumentsList) => {
 };
 
 const functionProxy = (PATH) => (target, thisArg, argumentsList) => {
-  // PATH+=`(${argumentsList.map(a=>JSON.stringify(a)).join(",")})`;
-  // addPath(PATH + "=>", argumentsList);
-  return mkCatcher([
-    ...PATH,
-    `(${argumentsList.map((a) => JSON.stringify(a)).join(",")})`,
-  ]);
+  log("=>" + PATH + "(", ...argumentsList, ")");
+  return mkCatcher([...PATH, "=>"]);
 };
 
 function mkCatcher(PATH = [], appl) {
@@ -181,8 +129,7 @@ function evaluator() {
     }
   }
 }
-module.exports = (sourceCode, { file } = {}) => {
-  loadHistory({ file });
+module.exports = (sourceCode) => {
   const THE_EVAL = eval;
   let once = true;
   const evaluate = evaluator.call({

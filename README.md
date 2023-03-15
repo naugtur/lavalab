@@ -23,10 +23,13 @@ Return values from proxy:
  n: noop function
  l: console.log
  f: function=>proxy-prompt
- 0: undefined
+ s: random string
+ U: undefined
 ```
 
 ## Examples
+
+> This section contains old examples from an earlier version of lavalab
 
 These are outputs from running the samples present in the repo.  
 obfuscated-a.js was created using highest level of https://obfuscator.io/
