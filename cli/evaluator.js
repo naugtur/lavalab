@@ -16,7 +16,7 @@ const prompt = (msg) => {
     if (item[0] === msg) {
       res = item[1];
       if (!fastForward) {
-        const FF = prompts(`Replaying: "${msg}" -> ${res}`);
+        const FF = prompts(`▒ ${msg} -> ${res}`);
         if (FF === "ff") {
           fastForward = true;
         }
@@ -46,6 +46,7 @@ const loadHistory = ({ file }) => {
     );
     console.log("+--");
     const num = ~~prompts("replay up to which step? [0-don't]");
+    addPath([], null, !!"force drawing");
     if (num > 0) {
       pendingPlayback = hist.slice(0, num);
     }
@@ -58,17 +59,27 @@ const { log, clear } = console;
 const knownProxies = new WeakMap();
 
 const visible = create(null);
-const addPath = (path = [], value) => {
+const addPath = (path = [], value, force) => {
   let current = visible;
   let redraw = false;
+  let last = {};
   for (const segment of path) {
     if (!hasOwnProperty.call(current, segment)) {
       redraw = true;
       current[segment] = value || create(null);
     }
     current = current[segment];
+    last = current;
   }
+  if (force) {
+    redraw = true;
+    if (value) {
+      last.toJSON = () => value;
+    }
+  }
+
   if (redraw) {
+    // prompts(); // pause to see the output
     clear();
     console.log(JSON.stringify(visible, null, 2));
   }
@@ -84,13 +95,21 @@ const requireProxy = (target, thisArg, argumentsList) => {
 };
 
 const functionProxy = (PATH) => (target, thisArg, argumentsList) => {
-  // PATH+=`(${argumentsList.map(a=>JSON.stringify(a)).join(",")})`;
-  // addPath(PATH + "=>", argumentsList);
-  return mkCatcher([
-    ...PATH,
-    `(${argumentsList.map((a) => JSON.stringify(a)).join(",")})`,
-  ]);
+  return mkGetTrap(PATH)(
+    {},
+    `(${argumentsList.map((a) => JSON.stringify(a)).join(",")})`
+  );
 };
+const callbackCaller = (PATH) => (target, thisArg, argumentsList) => {
+  addPath([...PATH, "(cb)"]);
+  const cb = argumentsList[argumentsList.length - 1];
+  if (typeof cb === "function") {
+    cb(mkGetTrap([...PATH, "(cb)"])({}, "arg1"));
+  }
+  return thisArg;
+};
+
+let stringSequence = 0;
 
 function mkCatcher(PATH = [], appl) {
   addPath(PATH);
@@ -115,34 +134,7 @@ function mkCatcher(PATH = [], appl) {
       }
       return !(y === "y");
     },
-    get: (me, name) => {
-      addPath([...PATH, name]);
-      if (typeof name === "symbol" && PATH.length === 0) {
-        return undefined;
-      }
-      if (hasOwnProperty.call(me, name)) {
-        return me[name];
-      }
-      if (name === "require" && PATH.length === 0) {
-        return mkCatcher(["require"], requireProxy);
-      }
-
-      const what = prompt(`Get ${PATH.join(".")}.${name} as [p/f/n/l/s/U]`);
-      switch (what) {
-        case "p":
-          return mkCatcher([...PATH, name]);
-        case "f":
-          return mkCatcher([...PATH, name], functionProxy([...PATH, name]));
-        case "n":
-          return () => {};
-        case "l":
-          return freeze(log);
-        case "s":
-          return `string${Math.random().toFixed(7).substring(2)}`;
-        default:
-          return undefined;
-      }
-    },
+    get: mkGetTrap(PATH),
     set: (me, name, value) => {
       addPath([...PATH, name]);
       if (typeof name === "symbol") {
@@ -162,12 +154,45 @@ function mkCatcher(PATH = [], appl) {
   return prox;
 }
 
+function mkGetTrap(PATH) {
+  return (me, name) => {
+    addPath([...PATH, name]);
+    if (typeof name === "symbol" && PATH.length === 0) {
+      return undefined;
+    }
+    if (hasOwnProperty.call(me, name)) {
+      return me[name];
+    }
+    if (name === "require" && PATH.length === 0) {
+      return mkCatcher(["require"], requireProxy);
+    }
+
+    const what = prompt(`Get ${PATH.join(".")}.${name} as [p/f/cb/n/l/s/U]`);
+    switch (what) {
+      case "p":
+        return mkCatcher([...PATH, name]);
+      case "f":
+        return mkCatcher([...PATH, name], functionProxy([...PATH, name]));
+      case "cb":
+        return mkCatcher([...PATH, name], callbackCaller([...PATH, name]));
+      case "l":
+        return freeze(log);
+      case "s":
+        const s = `string${stringSequence++}`;
+        addPath([...PATH, name], s, !!"force");
+        return s;
+      default:
+        return undefined;
+    }
+  };
+}
+
 log(`Return values from proxy:
  p: proxy-prompt
- n: noop function
  l: console.log
  f: function=>proxy-prompt
- s: random string
+ cb: function=>calls last arg
+ s: a string
  U: undefined
 `);
 
@@ -204,7 +229,7 @@ module.exports = (sourceCode, { file } = {}) => {
                 );
               }
               const stamp = "eval" + Date.now();
-              log(stamp, ":", code.substring(0, 20) + "…");
+              log(stamp, ":", code.substring(0, 20) + "… (written to a file)");
               writeFileSync(stamp, code);
             });
           }
