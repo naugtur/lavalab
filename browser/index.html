@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <pre>
+        This is a very rough PoC of running the lavalab evaluator in the browser.
+        Evaluator should run in a webworker, that's not implemented yet.
+
+        Open the developer console to play with it. 
+        The demo button will run the code in the textarea.
+    </pre>
+    <div>
+        <button id="demo">Run</button>
+    </div>
+
+    <textarea id="code" cols="52" rows="16">
+console.log("this is a demo sample");
+new URL("https://github.com");
+const res = fetch("https://github.com")
+const text = res.text();
+
+const a = eval('1+1');
+console.log({ a });
+eval('location.hash="hello"');
+    </textarea>
+    <script src="./lockdown.umd.js"></script>
+    <script src="./evaluator.js"></script>
+    <script>
+        const demo = document.getElementById('demo');
+        demo.addEventListener('click', () => {
+            const code = document.getElementById('code').value;
+            lavalab(code);
+        });
+    </script>
+</body>
+
+</html>
