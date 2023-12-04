@@ -29,3 +29,8 @@ Return values from proxy:
 ## Browser
 
 There's a browser variant, even more barebones and experimental. See `browser/index.html`
+
+
+----
+
+> Samples zip file may contain actual malware samples historically available from NPM. It's intended only for author's own usage. Author is allowing opening the zip file by people who figure out how to open the zip file. 😄 The password is not too strong.
