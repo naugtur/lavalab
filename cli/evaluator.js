@@ -45,7 +45,12 @@ const loadHistory = ({ file }) => {
       hist.map((item, num) => `| ${num}: ${item[0]}${item[1]}`).join("\n")
     );
     console.log("+--");
-    const num = ~~prompts("replay up to which step? [0-don't]");
+    let num = prompts("replay up to which step? [0-don't, default all]");
+    if(num === '') {
+      num = Infinity;
+    } else {
+      num = Number(num);
+    }
     addPath([], null, !!"force drawing");
     if (num > 0) {
       pendingPlayback = hist.slice(0, num);
@@ -111,8 +116,14 @@ const callbackCaller = (PATH) => (target, thisArg, argumentsList) => {
 
 let stringSequence = 0;
 
+const PROXYCACHE = new Map();
+
 function mkCatcher(PATH = [], appl) {
   addPath(PATH);
+  const cacheKeyFromPath = PATH.join(".");
+  if(PROXYCACHE.has(cacheKeyFromPath)) {
+    return PROXYCACHE.get(cacheKeyFromPath);
+  }
   const cache = new Set();
   let target = {};
   if (appl) {
@@ -150,6 +161,7 @@ function mkCatcher(PATH = [], appl) {
     apply: appl,
     construct: functionProxy(PATH),
   });
+  PROXYCACHE.set(cacheKeyFromPath, prox);
   knownProxies.set(prox, PATH);
   return prox;
 }
@@ -166,20 +178,27 @@ function mkGetTrap(PATH) {
     if (name === "require" && PATH.length === 0) {
       return mkCatcher(["require"], requireProxy);
     }
+    NEWPATH = [...PATH, name];
+    const pathString = `${NEWPATH.join(".")}`;
+    let what;
+    if(PROXYCACHE.has(pathString)) {
+      what = 'p';
+    } else {
+      what = prompt(`Get ${pathString} as [p/f/cb/n/l/s/U]`);
+    }
 
-    const what = prompt(`Get ${PATH.join(".")}.${name} as [p/f/cb/n/l/s/U]`);
     switch (what) {
       case "p":
-        return mkCatcher([...PATH, name]);
+        return mkCatcher(NEWPATH);
       case "f":
-        return mkCatcher([...PATH, name], functionProxy([...PATH, name]));
+        return mkCatcher(NEWPATH, functionProxy(NEWPATH));
       case "cb":
-        return mkCatcher([...PATH, name], callbackCaller([...PATH, name]));
+        return mkCatcher(NEWPATH, callbackCaller(NEWPATH));
       case "l":
         return freeze(log);
       case "s":
         const s = `string${stringSequence++}`;
-        addPath([...PATH, name], s, !!"force");
+        addPath(NEWPATH, s, !!"force");
         return s;
       default:
         return undefined;
