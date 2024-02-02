@@ -1,0 +1,6 @@
+[["Access real .console? [a=always/y/N]","a"],
+["Access real .URL? [a=always/y/N]","a"],
+["Run real require(fs)? [y/N]",""],
+["Get require.(fs).readFileSync as [p/f/cb/n/l/s/-/U]","f"],
+["Get require.(fs).readFileSync.(\"./payload\") as [p/f/cb/n/l/s/-/U]","p"],
+["Run real EVAL? [y/N]",""]]

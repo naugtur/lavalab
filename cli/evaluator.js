@@ -46,7 +46,7 @@ const loadHistory = ({ file }) => {
     );
     console.log("+--");
     let num = prompts("replay up to which step? [0-don't, default all]");
-    if(num === '') {
+    if (num === "") {
       num = Infinity;
     } else {
       num = Number(num);
@@ -118,21 +118,28 @@ let stringSequence = 0;
 
 const PROXYCACHE = new Map();
 
-function mkCatcher(PATH = [], appl) {
+function mkCatcher(PATH = [], { callable, globalThisTarget } = {}) {
   addPath(PATH);
   const cacheKeyFromPath = PATH.join(".");
-  if(PROXYCACHE.has(cacheKeyFromPath)) {
+  if (PROXYCACHE.has(cacheKeyFromPath)) {
     return PROXYCACHE.get(cacheKeyFromPath);
   }
-  const cache = new Set();
+  const realAccessCache = new Set();
   let target = {};
-  if (appl) {
-    target = () => {};
+  if (callable) {
+    target = function () {};
+  }
+  if (globalThisTarget) {
+    target = globalThisTarget;
   }
   const prox = new Proxy(target, {
     has: (_, name) => {
+      console.log("has", name);
       addPath([...PATH, name]);
-      if (cache.has(name)) {
+      if (globalThisTarget) {
+        return true;
+      }
+      if (realAccessCache.has(name)) {
         return false;
       }
       if (name === "require" && PATH.length === 0) {
@@ -140,7 +147,7 @@ function mkCatcher(PATH = [], appl) {
       }
       const y = prompt(`Access real ${PATH.join(".")}.${name}? [a=always/y/N]`);
       if (y === "a") {
-        cache.add(name);
+        realAccessCache.add(name);
         return false;
       }
       return !(y === "y");
@@ -158,7 +165,7 @@ function mkCatcher(PATH = [], appl) {
         return true;
       }
     },
-    apply: appl,
+    apply: callable,
     construct: functionProxy(PATH),
   });
   PROXYCACHE.set(cacheKeyFromPath, prox);
@@ -172,28 +179,27 @@ function mkGetTrap(PATH) {
     if (typeof name === "symbol" && PATH.length === 0) {
       return undefined;
     }
-    if (hasOwnProperty.call(me, name)) {
-      return me[name];
-    }
     if (name === "require" && PATH.length === 0) {
-      return mkCatcher(["require"], requireProxy);
+      return mkCatcher(["require"], { callable: requireProxy });
     }
-    NEWPATH = [...PATH, name];
+    const NEWPATH = [...PATH, name];
     const pathString = `${NEWPATH.join(".")}`;
     let what;
-    if(PROXYCACHE.has(pathString)) {
-      what = 'p';
+    if (PROXYCACHE.has(pathString)) {
+      what = "p";
     } else {
-      what = prompt(`Get ${pathString} as [p/f/cb/n/l/s/U]`);
+      what = prompt(`Get ${pathString} as [p/f/cb/n/l/s/-/U]`);
     }
 
     switch (what) {
+      case "-":
+        return me[name];
       case "p":
         return mkCatcher(NEWPATH);
       case "f":
-        return mkCatcher(NEWPATH, functionProxy(NEWPATH));
+        return mkCatcher(NEWPATH, { callable: functionProxy(NEWPATH) });
       case "cb":
-        return mkCatcher(NEWPATH, callbackCaller(NEWPATH));
+        return mkCatcher(NEWPATH, { callable: callbackCaller(NEWPATH) });
       case "l":
         return freeze(log);
       case "s":
@@ -212,6 +218,7 @@ log(`Return values from proxy:
  f: function=>proxy-prompt
  cb: function=>calls last arg
  s: a string
+ -: value from proxy target
  U: undefined
 `);
 
@@ -225,7 +232,7 @@ function evaluator() {
     }
   }
 }
-module.exports = (sourceCode, { file } = {}) => {
+module.exports.run = (sourceCode, { file } = {}) => {
   loadHistory({ file });
   const THE_EVAL = eval;
   let once = true;
@@ -259,6 +266,39 @@ module.exports = (sourceCode, { file } = {}) => {
   });
   lockdown({
     errorTaming: "unsafe",
+    overrideTaming: "severe"
   });
   return evaluate.call(create(null), sourceCode);
+};
+
+module.exports.runBytecode = (bytecode, { file } = {}) => {
+  const vm = require("node:vm");
+  let success;
+  for (let length = 0; length < bytecode.length; length++) {
+    const fakeCode = " ".repeat(length);
+
+    const rebuilt = new vm.Script(fakeCode, {
+      cachedData: bytecode,
+      filename: "a.js",
+      lineOffset: 0,
+      displayErrors: true,
+    });
+    if (!rebuilt.cachedDataRejected) {
+      success = rebuilt;
+      console.log("guessed", length);
+      break;
+    }
+  }
+  if (success) {
+    loadHistory({ file });
+    lockdown({
+      errorTaming: "unsafe",
+      overrideTaming: "severe"
+    });
+
+    // TODO maybe: run in new context, execute lockdown and run in current context within that.
+    success.runInNewContext(mkCatcher([], { globalThisTarget: globalThis }));
+  } else {
+    console.log("Failed to guess", bytecode.length);
+  }
 };

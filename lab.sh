@@ -6,4 +6,5 @@ docker run --rm -it \
   --network none \
   --name lab-no-net-alpine \
   --entrypoint ash \
+  -v $(pwd)/samples:/lab/samples \
   lab-no-net-alpine-image \

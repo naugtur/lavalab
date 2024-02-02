@@ -106,3 +106,4 @@ dist
 samples/*.cjs
 samples/.*
 samples/*.malware
+tmp

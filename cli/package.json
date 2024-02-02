@@ -2,7 +2,10 @@
   "name": "lavalab",
   "version": "1.0.0",
   "description": "",
-  "bin": "lavalab.js",
+  "bin": {
+    "lavalab": "lavalab.js",
+    "lavalabc": "lavalabc.js"
+  },
   "type": "commonjs",
   "scripts": {
     "prepack": "npm i --ignore-scripts",
@@ -29,6 +32,7 @@
   ],
   "files": [
     "lavalab.js",
+    "lavalabc.js",
     "evaluator.js"
   ]
 }

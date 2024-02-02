@@ -2,11 +2,11 @@
 
 const dns = require("dns");
 require("ses");
-const { readFileSync, } = require("fs");
+const { readFileSync } = require("fs");
 
 const { log } = console;
 
-const { run } = require('./evaluator.js');
+const { runBytecode } = require("./evaluator.js");
 
 log("Making sure we're offline...");
 dns.lookupService("8.8.8.8", 53, function (err) {
@@ -17,5 +17,9 @@ dns.lookupService("8.8.8.8", 53, function (err) {
   const file = process.argv[2];
   log(`## Running "${file}" ##`);
 
-  run(readFileSync(file, "utf-8"), { file });
+  const v8 = require("node:v8");
+  v8.setFlagsFromString("--no-lazy");
+  v8.setFlagsFromString("--no-flush-bytecode");
+
+  runBytecode(readFileSync(file), { file });
 });
