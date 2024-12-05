@@ -134,7 +134,6 @@ function mkCatcher(PATH = [], { callable, globalThisTarget } = {}) {
   }
   const prox = new Proxy(target, {
     has: (_, name) => {
-      console.log("has", name);
       addPath([...PATH, name]);
       if (globalThisTarget) {
         return true;

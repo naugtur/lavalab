@@ -1,4 +1,4 @@
-FROM node:lts-alpine 
+FROM node:20.0.0-alpine 
 RUN apk add vim
 RUN mkdir /lab
 COPY ./lavalab-1.0.0.tgz /lab/lavalab.tgz
